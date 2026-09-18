@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stem SignLanguage — Real-Time Sign Language Recognition (in your browser)</title>
 <meta name="description" content="Real-time sign language recognition that runs entirely in your browser: MediaPipe hand tracking + the same neural model the desktop app trains. No video is uploaded.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤟</text></svg>">
 <style>
   :root{
     --bg:#0b1020; --bg2:#0f1530; --card:#151c3a; --line:#24305c;
@@ -184,8 +185,6 @@ python main.py</code></pre>
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3"></script>
-<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.min.js"></script>
 <script type="module">
 import { frameFeatures, softmax, PER_HAND_DIM, FEATURE_DIM } from "./js/features.js";
 
@@ -223,7 +222,7 @@ const clearBtn = document.getElementById("clearBtn");
 
 const CONNECT = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 
-let classes = [], seqLen = 30, session = null, handLandmarker = null;
+let classes = [], seqLen = 30, session = null, handLandmarker = null, ort = null;
 let win = [], lastLabel = null, streak = 0, lastConf = 0, current = null, cooldown = 0;
 let sentenceWords = [];
 const STABLE = 4, THRESHOLD = 0.60, COOLDOWN = 30;
@@ -277,8 +276,8 @@ async function runInference(){
   win.forEach((v,i)=>x.set(v, i*FEATURE_DIM));
   const mask = new Float32Array(seqLen).fill(1);
   const feeds = {
-    x: new window.ort.Tensor("float32", x, [1, seqLen, FEATURE_DIM]),
-    mask: new window.ort.Tensor("float32", mask, [1, seqLen]),
+    x: new ort.Tensor("float32", x, [1, seqLen, FEATURE_DIM]),
+    mask: new ort.Tensor("float32", mask, [1, seqLen]),
   };
   const out = await session.run(feeds);
   const logits = Array.from(out.logits.data);
@@ -337,17 +336,31 @@ async function loop(){
 async function boot(){
   try {
     setStatus("Loading hand-landmark task…");
+    const mp = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3");
+    const FilesetResolver = mp.FilesetResolver;
+    const HandLandmarker = mp.HandLandmarker;
     const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-    handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: "hand_landmarker.task", delegate: "GPU" },
-      runningMode: "VIDEO", numHands: 2,
-      minHandDetectionConfidence: 0.5, minTrackingConfidence: 0.5,
-    });
+    try {
+      handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: "hand_landmarker.task", delegate: "GPU" },
+        runningMode: "VIDEO", numHands: 2,
+        minHandDetectionConfidence: 0.5, minTrackingConfidence: 0.5,
+      });
+    } catch (gpuErr) {
+      console.warn("GPU delegate failed, falling back to CPU:", gpuErr);
+      handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: "hand_landmarker.task", delegate: "CPU" },
+        runningMode: "VIDEO", numHands: 2,
+        minHandDetectionConfidence: 0.5, minTrackingConfidence: 0.5,
+      });
+    }
 
     setStatus("Loading sign model…");
-    window.ort.env.wasm.numThreads = 1;
-    window.ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/";
-    session = await window.ort.InferenceSession.create("sequence.onnx", { executionProviders: ["wasm"] });
+    const omod = await import("https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.min.mjs");
+    ort = omod.default ?? omod;
+    ort.env.wasm.numThreads = 1;
+    ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/";
+    session = await ort.InferenceSession.create("sequence.onnx", { executionProviders: ["wasm"] });
     const meta = await (await fetch("classes.json")).json();
     classes = meta.classes; seqLen = meta.seq_len;
     setStatus("Ready — grant camera access to start.");
