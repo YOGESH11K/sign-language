@@ -1,5 +1,10 @@
 # Real-Time Sign Language Communication System
 
+> **Live demo / landing page:** https://stem-signlanguage.vercel.app —
+> a browser hand-tracking demo of the same MediaPipe pipeline the desktop app uses.
+> (Full sign recognition runs on your machine in the desktop app; a browser can't
+> stream your local webcam-backed PyTorch model.)
+
 A desktop application that turns a webcam into a two-way communication aid for
 deaf / hard-of-hearing / non-speaking users and the people they talk with.
 
