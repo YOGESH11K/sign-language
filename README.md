@@ -1,9 +1,10 @@
 # Real-Time Sign Language Communication System
 
-> **Live demo / landing page:** https://stem-signlanguage.vercel.app —
-> a browser hand-tracking demo of the same MediaPipe pipeline the desktop app uses.
-> (Full sign recognition runs on your machine in the desktop app; a browser can't
-> stream your local webcam-backed PyTorch model.)
+> **Live in the browser:** https://stem-signlanguage.vercel.app — real-time sign
+> recognition runs entirely in the tab (MediaPipe hand tracking + the trained GRU
+> exported to ONNX via onnxruntime-web/WebAssembly). The same page also hosts the
+> desktop instructions. `python -m training.export_onnx` ships a freshly trained
+> model to `web/` for redeploying.
 
 A desktop application that turns a webcam into a two-way communication aid for
 deaf / hard-of-hearing / non-speaking users and the people they talk with.
