@@ -67,6 +67,7 @@ class RecognitionConfig:
             "processed_data": project_path(self.processed_data_dir),
             "reference_signs": project_path(self.reference_signs_dir),
             "eval_output": project_path(self.eval_output_dir),
+            "web_dir": project_path("web"),
         }
 
 
