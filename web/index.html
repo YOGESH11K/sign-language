@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stem SignLanguage — Real-Time Sign Language Communication System</title>
+<meta name="description" content="A privacy-first, real-time sign language communication system: sign to text and speech, text to sign glosses. Runs locally with MediaPipe + ML.">
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#0f1530; --card:#151c3a; --line:#24305c;
+    --txt:#e8ecff; --mut:#9aa7d8; --acc:#4f8cff; --acc2:#7c5cff;
+    --ok:#34d399; --warn:#fbbf24; --danger:#f87171;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; line-height:1.6}
+  a{color:var(--acc); text-decoration:none}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+
+  /* header */
+  header{position:sticky; top:0; z-index:10; background:rgba(11,16,32,.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+  nav{display:flex; align-items:center; justify-content:space-between; padding:14px 0}
+  .logo{font-weight:800; letter-spacing:.5px; font-size:18px}
+  .logo span{color:var(--acc)}
+  nav ul{display:flex; gap:22px; list-style:none}
+  nav ul a{color:var(--mut); font-size:14px}
+  nav ul a:hover{color:var(--txt)}
+
+  /* hero */
+  .hero{background:radial-gradient(1200px 600px at 80% -10%, rgba(124,92,255,.18), transparent 60%), radial-gradient(900px 500px at 10% 110%, rgba(79,140,255,.15), transparent 60%)}
+  .hero .wrap{display:flex; gap:40px; align-items:center; padding-top:90px; padding-bottom:70px}
+  .hero h1{font-size:44px; line-height:1.15; letter-spacing:-.5px}
+  .hero h1 em{font-style:normal; color:transparent; background:linear-gradient(90deg,var(--acc),var(--acc2)); -webkit-background-clip:text; background-clip:text}
+  .hero p.lead{color:var(--mut); margin:18px 0 24px; max-width:560px; font-size:17px}
+  .btns{display:flex; gap:12px; flex-wrap:wrap}
+  .btn{display:inline-block; padding:12px 22px; border-radius:10px; font-weight:600; font-size:14px; border:1px solid var(--line)}
+  .btn.primary{background:linear-gradient(90deg,var(--acc),var(--acc2)); color:#fff; border:none}
+  .btn.secondary{color:var(--txt); background:var(--card)}
+  .btn:hover{transform:translateY(-1px); box-shadow:0 6px 20px rgba(79,140,255,.25)}
+  .hero-badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--ok); border:1px solid rgba(52,211,153,.35); background:rgba(52,211,153,.08); padding:6px 14px; border-radius:999px; margin-bottom:20px}
+
+  /* live demo */
+  #demo{margin:60px 0}
+  .section-title{font-size:28px; margin-bottom:8px}
+  .section-sub{color:var(--mut); margin-bottom:28px; max-width:640px}
+  .demo-box{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+  .demo-top{display:flex; gap:18px; padding:18px; align-items:flex-start; flex-wrap:wrap}
+  .cam{position:relative; flex:1 1 420px; border-radius:12px; overflow:hidden; background:#000; min-height:320px}
+  .cam video,.cam canvas{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  #demoStatus{position:absolute; top:10px; left:10px; z-index:5; font-size:13px; background:rgba(0,0,0,.55); padding:6px 12px; border-radius:8px}
+  #demoStats{flex:0 0 240px; display:flex; flex-direction:column; gap:10px}
+  .stat{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px 14px}
+  .stat b{display:block; font-size:22px}
+  .stat span{font-size:12px; color:var(--mut)}
+  .hint{color:var(--mut); font-size:13px; margin-top:10px}
+
+  /* vocab */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:20px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px}
+  .card b{font-size:16px; display:block}
+  .card small{color:var(--mut)}
+  .card .en{color:var(--acc); font-weight:600}
+  .pill{display:inline-block; font-size:11px; margin-top:8px; padding:3px 10px; border-radius:999px; background:rgba(79,140,255,.12); color:var(--acc)}
+
+  /* features */
+  .feat{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px}
+  .feat .card{border-top:2px solid var(--acc)}
+  .feat .card h3{font-size:16px; margin-bottom:6px}
+
+  /* code */
+  pre{background:#05070f; border:1px solid var(--line); border-radius:10px; padding:18px; overflow-x:auto; font-size:13px; color:#c8d3ff; margin:14px 0}
+  code{font-family:'Cascadia Mono',Consolas,monospace}
+
+  footer{border-top:1px solid var(--line); margin-top:70px; padding:34px 0; color:var(--mut); font-size:13px}
+  footer b{color:var(--txt)}
+  @media(max-width:760px){ .hero .wrap{flex-direction:column; padding-top:50px} .hero h1{font-size:32px} .demo-top{flex-direction:column} #demoStats{flex:1 1 auto} }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo">Stem<span>SignLanguage</span></div>
+    <ul>
+      <li><a href="#demo">Live Demo</a></li>
+      <li><a href="#vocab">Vocabulary</a></li>
+      <li><a href="#howto">Run Locally</a></li>
+      <li><a href="#howto">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="txt">
+      <div class="hero-badge">Privacy-first &middot; runs on your machine &middot; real ML, no shortcuts</div>
+      <h1>Real-time <em>Sign Language</em> communication for everyone</h1>
+      <p class="lead">
+        <b>Sign &rarr; Text &rarr; Speech</b> and the reverse
+        <b>Text/Speech &rarr; Sign glosses</b>. A desktop system that watches your
+        webcam, recognises signs with a model you train yourself, builds sentences,
+        and speaks them aloud &mdash; entirely offline and local.
+      </p>
+      <div class="btns">
+        <a class="btn primary" href="#demo">Try the live hand tracking</a>
+        <a class="btn secondary" href="#howto">Get the desktop app</a>
+      </div>
+    </div>
+    <div class="card" style="flex:0 0 260px">
+      <b>Why local + private</b>
+      <small style="display:block; margin-top:10px">Video frames never leave your computer &mdash; only normalised landmark coordinates are used, stored, and trained on device.</small>
+      <div style="margin-top:14px; font-size:13px; color:var(--mut)">MediaPipe Hands &middot; RandomForest / GRU &middot; Windows SAPI TTS</div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="demo">
+  <h2 class="section-title">Live demo &mdash; in your browser</h2>
+  <p class="section-sub">This page runs the same MediaPipe hand-landmark tracking the desktop app uses.
+  Show your hand to the camera and watch the 21-point skeleton. Full sign recognition runs
+  in the desktop app where your own ML model works on your local camera stream.</p>
+  <div class="demo-box">
+    <div class="demo-top">
+      <div class="cam">
+        <span id="demoStatus">Waiting for camera…</span>
+        <video id="vd" playsinline></video>
+        <canvas id="cv"></canvas>
+      </div>
+      <div id="demoStats">
+        <div class="stat"><b id="stHands">0</b><span>hands detected</span></div>
+        <div class="stat"><b id="stConf">–</b><span>tracking confidence</span></div>
+        <div class="stat"><b id="stFps">0</b><span>frames/sec</span></div>
+      </div>
+    </div>
+    <div class="hint" style="padding:0 18px 16px">
+      💡 Allow camera access when prompted. Works best in a bright room, hand well inside the frame. Nothing is uploaded &mdash; all processing happens in this tab.
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="vocab">
+  <h2 class="section-title">Current vocabulary (trainable)</h2>
+  <p class="section-sub">Signs are added or removed freely &mdash; you record your own samples with the collection tool and the model is retrained on your machine.</p>
+  <div class="grid" id="signGrid"></div>
+</section>
+
+<section class="wrap" id="howto">
+  <h2 class="section-title">Run the desktop app</h2>
+  <p class="section-sub">Python 3.x on Windows. The web UI above is a demonstration; the full experience with live sign recognition, sentence building, TTS and a two-tab interface is the Python application.</p>
+  <pre><code>git clone https://github.com/YOGESH11K/sign-language.git
+cd sign-language
+pip install -r requirements.txt
+python main.py</code></pre>
+  <p class="section-sub">Add a new sign (no typing required):</p>
+  <pre><code>python -m training.collect_data --label HELLO --samples 20 --auto
+python -m training.preprocess
+python -m training.train --kind sequence
+python main.py</code></pre>
+  <p class="section-sub">Vocabulary, dataset &amp; architecture details live in the repo README. Raw webcam frames are never stored &mdash; only landmark coordinates.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <b>Stem SignLanguage</b> &middot; built with MediaPipe Tasks, scikit-learn &amp; PyTorch GRU &middot; no shortcuts, honest accuracy
+    &mdash; accuracy is measured on your own held-out data, never hard-coded.
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3"></script>
+<script>
+const SIGNS = [
+  ["HELLO", "hello", "wave"],
+  ["THANK_YOU", "thank you", "palm from chin"],
+  ["HOW_ARE_YOU", "how are you", "question motion"],
+  ["WELCOME", "welcome", "chest open"],
+  ["WHERE", "where are you", "side circle"],
+  ["KHANA_HO_GYA", "meals done", "eating gesture"],
+  ["PANI_PI_LIYA", "drank water", "water to mouth"],
+  ["SO_RHA_HU", "am sleeping", "palms together at ear"],
+  ["SOCH_RHA_HU", "am thinking", "hand to forehead"],
+  ["CALL_MAI_HU", "on a call", "hand to ear"],
+  ["HAIR_SET_KR_RHA_HU", "setting hair", "comb gesture"],
+];
+const grid = document.getElementById("signGrid");
+SIGNS.forEach(([g, en, mv]) => {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<b>${g}</b><span class="en">${en}</span><small> · ${mv}</small><span class="pill">dynamic</span>`;
+  grid.appendChild(el);
+});
+
+/* ---- MediaPipe hand tracking demo ---- */
+const vd = document.getElementById("vd");
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+const statusEl = document.getElementById("demoStatus");
+const stHands = document.getElementById("stHands");
+const stConf = document.getElementById("stConf");
+const stFps = document.getElementById("stFps");
+
+const CONN = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+
+async function main(){
+  try{
+    const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+    const handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions:{ modelAssetPath:"hand_landmarker.task", delegate:"GPU" },
+      runningMode:"VIDEO", numHands:2,
+      minHandDetectionConfidence:0.5, minTrackingConfidence:0.5
+    });
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+    vd.srcObject = stream;
+    await vd.play();
+    statusEl.textContent = "Tracking…";
+    let lastVideoTime = -1, rafId, frames = 0, lastFps = performance.now();
+    function renderLoop(){
+      if (vd.currentTime !== lastVideoTime){
+        lastVideoTime = vd.currentTime;
+        cv.width = vd.videoWidth; cv.height = vd.videoHeight;
+        ctx.drawImage(vd, 0, 0, cv.width, cv.height);
+        const t = performance.now();
+        const res = handLandmarker.detectForVideo(vd, t);
+        frames++;
+        if (t - lastFps > 1000){ stFps.textContent = frames; frames = 0; lastFps = t; }
+        if (res.landmarks && res.landmarks.length){
+          stHands.textContent = res.landmarks.length;
+          stConf.textContent = res.landmarks[0] && res.landmarks[0][0] ? (100*(1-res.landmarks[0][0].z)*-1).toFixed(0)+"%" : "—";
+          drawHands(res.landmarks);
+        } else { stHands.textContent = 0; stConf.textContent = "–"; }
+      }
+      requestAnimationFrame(renderLoop);
+    }
+    renderLoop();
+  }catch(err){
+    statusEl.textContent = "Camera unavailable: " + err.message;
+    console.error(err);
+  }
+}
+function drawHands(landmarks){
+  const L = landmarks[0];
+  const n = landmarks.length;
+  ctx.strokeStyle = "#4f8cff"; ctx.lineWidth = 3; ctx.lineCap = "round";
+  for (let l=0; l<n; l++){
+    const lm = landmarks[l];
+    CONN.forEach(([a,b])=>{
+      ctx.beginPath();
+      ctx.moveTo(lm[a].x*cv.width, lm[a].y*cv.height);
+      ctx.lineTo(lm[b].x*cv.width, lm[b].y*cv.height);
+      ctx.stroke();
+    });
+  }
+  ctx.fillStyle = "#7c5cff";
+  for (let l=0; l<n; l++){
+    const lm = landmarks[l];
+    lm.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x*cv.width, p.y*cv.height, 4, 0, Math.PI*2); ctx.fill(); });
+  }
+}
+main();
+</script>
+</body>
+</html>

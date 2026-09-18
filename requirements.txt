@@ -1,0 +1,23 @@
+# Core
+opencv-python>=4.8
+mediapipe>=0.10.21
+numpy>=1.24
+Pillow>=10.0
+
+# Recognition
+scikit-learn>=1.3
+
+# Sequence model (dynamic signs). Optional - static-only mode works without it.
+torch>=2.0
+
+# Speech input (reverse tab microphone)
+sounddevice>=0.4.6
+SpeechRecognition>=3.10
+
+# Optional cross-platform TTS (Windows SAPI is used automatically, so pyttsx3
+# is only needed on macOS/Linux)
+# pyttsx3>=2.90
+
+# Development / evaluation
+pytest>=8.0
+matplotlib>=3.8

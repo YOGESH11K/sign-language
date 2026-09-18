@@ -1,0 +1,168 @@
+{
+  "language": "isl",
+  "language_full": "Indian Sign Language (initial vocabulary)",
+  "notes": [
+    "Signs marked 'static' are recognised from a single hand posture using the static classifier.",
+    "Signs marked 'dynamic' are recognised from a short hand-movement sequence using the sequence model.",
+    "The 'en' field is the display/grammar word used when building sentences.",
+    "Add new signs by appending entries here and collecting training samples for them."
+  ],
+  "signs": {
+    "A": {
+      "type": "static",
+      "en": "a"
+    },
+    "B": {
+      "type": "static",
+      "en": "b"
+    },
+    "C": {
+      "type": "static",
+      "en": "c"
+    },
+    "D": {
+      "type": "static",
+      "en": "d"
+    },
+    "E": {
+      "type": "static",
+      "en": "e"
+    },
+    "F": {
+      "type": "static",
+      "en": "f"
+    },
+    "G": {
+      "type": "static",
+      "en": "g"
+    },
+    "HELLO": {
+      "type": "dynamic",
+      "en": "hello"
+    },
+    "THANK_YOU": {
+      "type": "dynamic",
+      "en": "thank you"
+    },
+    "YES": {
+      "type": "dynamic",
+      "en": "yes"
+    },
+    "NO": {
+      "type": "dynamic",
+      "en": "no"
+    },
+    "HELP": {
+      "type": "dynamic",
+      "en": "help"
+    },
+    "PLEASE": {
+      "type": "static",
+      "en": "please"
+    },
+    "SORRY": {
+      "type": "static",
+      "en": "sorry"
+    },
+    "I": {
+      "type": "static",
+      "en": "I"
+    },
+    "YOU": {
+      "type": "static",
+      "en": "you"
+    },
+    "MY": {
+      "type": "static",
+      "en": "my"
+    },
+    "NAME": {
+      "type": "static",
+      "en": "name"
+    },
+    "IS": {
+      "type": "static",
+      "en": "is"
+    },
+    "FOOD": {
+      "type": "static",
+      "en": "food"
+    },
+    "WATER": {
+      "type": "static",
+      "en": "water"
+    },
+    "HOME": {
+      "type": "static",
+      "en": "home"
+    },
+    "HOSPITAL": {
+      "type": "dynamic",
+      "en": "hospital"
+    },
+    "EMERGENCY": {
+      "type": "dynamic",
+      "en": "emergency"
+    },
+    "HOW": {
+      "type": "dynamic",
+      "en": "how"
+    },
+    "ARE": {
+      "type": "static",
+      "en": "are"
+    },
+    "GOOD": {
+      "type": "static",
+      "en": "good"
+    },
+    "BAD": {
+      "type": "static",
+      "en": "bad"
+    },
+    "RAHUL": {
+      "type": "static",
+      "en": "Rahul"
+    },
+    "STOP": {
+      "type": "static",
+      "en": "stop"
+    },
+    "HOW_ARE_YOU": {
+      "type": "dynamic",
+      "en": "how are you"
+    },
+    "WELCOME": {
+      "type": "dynamic",
+      "en": "welcome"
+    },
+    "WHERE": {
+      "type": "dynamic",
+      "en": "where are you"
+    },
+    "KHANA_HO_GYA": {
+      "type": "dynamic",
+      "en": "meals done"
+    },
+    "PANI_PI_LIYA": {
+      "type": "dynamic",
+      "en": "drank water"
+    },
+    "SO_RHA_HU": {
+      "type": "dynamic",
+      "en": "am sleeping"
+    },
+    "SOCH_RHA_HU": {
+      "type": "dynamic",
+      "en": "am thinking"
+    },
+    "CALL_MAI_HU": {
+      "type": "dynamic",
+      "en": "on a call"
+    },
+    "HAIR_SET_KR_RHA_HU": {
+      "type": "dynamic",
+      "en": "setting hair"
+    }
+  }
+}

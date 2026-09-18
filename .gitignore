@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+config.json
+
+# collected data (training samples) - keep raw personal data local by default
+data/raw/*
+data/reference/*
+!data/raw/.gitkeep
+!data/reference/.gitkeep
+
+data/processed/*
+
+models/sign_model/*.joblib
+models/sign_model/*.pt
+models/sign_model/sign_index.json
+models/eval/
+
+# keep the mediapipe task file tracked? it is ~7.8 MB and re-downloadable
+models/sign_model/hand_landmarker.task
